@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <!-- הגדרה מותאמת למסכי מובייל מתקדמים כמו Samsung S25 Ultra, כולל התאמה ל-Safe Areas -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>פלאי העולם - תצוגה אינטראקטיבית</title>
+    <!-- טעינת Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: '#1f2937',
+                            900: '#111827',
+                            950: '#030712',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap');
+        body {
+            font-family: 'Heebo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* עיצוב פס הגלילה לאסתטיקה תואמת מצב כהה */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563; 
+        }
+        /* אפקט הופעה חלקה לכרטיסיות */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-animate {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen pt-12 pb-16 px-4 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-emerald-400 mb-6 drop-shadow-lg">
+                פלאי העולם
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+                מסע היסטורי, ארכיטקטוני ותרבותי אל המבנים המרשימים והמונומנטליים ביותר שיצרה האנושות לאורך ההיסטוריה.
+            </p>
+        </header>
+
+        <main id="wonders-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10">
+            <!-- התוכן יוזרק לכאן באמצעות JavaScript -->
+        </main>
+
+        <footer class="mt-20 pt-8 border-t border-gray-800 text-gray-500 text-sm">
+            <h3 class="text-lg font-semibold text-gray-300 mb-4">מקורות מידע:</h3>
+            <ul class="list-disc list-inside space-y-2 opacity-80">
+                <li><strong>הקולוסיאום:</strong> מאגר המידע של ארגון אונסק"ו (UNESCO World Heritage Centre), "The Colosseum" מאת קית' הופקינס.</li>
+                <li><strong>החומה הסינית:</strong> האנציקלופדיה הבריטניקה, הרישומים ההיסטוריים של שושלת צ'ין (Shiji).</li>
+                <li><strong>פטרה:</strong> רשות העתיקות של ירדן, מחקרים ארכיאולוגיים של נלסון גליק.</li>
+                <li><strong>הטאג' מהאל:</strong> השירות הארכיאולוגי של הודו (ASI).</li>
+                <li><strong>ישו הגואל:</strong> הארכיון הלאומי של ברזיל.</li>
+                <li><strong>מאצ'ו פיצ'ו:</strong> פרסומי אוניברסיטת ייל (משלחות היירם בינגהאם), משרד התרבות של פרו.</li>
+                <li><strong>צ'יצ'ן איצה:</strong> המכון הלאומי לאנתרופולוגיה והיסטוריה של מקסיקו (INAH).</li>
+                <li><strong>פירמידת גיזה:</strong> משרד העתיקות המצרי, כתבי הרודוטוס, מחקרי אגיפטולוגיה של מארק לנר.</li>
+            </ul>
+        </footer>
+    </div>
+
+    <!-- מודל להגדלת תמונה (Lightbox) -->
+    <div id="image-modal" class="fixed inset-0 z-[100] hidden bg-gray-950/90 backdrop-blur-md flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="closeImageModal()">
+        <button onclick="closeImageModal()" class="absolute top-6 right-6 text-white bg-gray-800/60 hover:bg-gray-700 p-3 rounded-full backdrop-blur-md transition-all duration-200 focus:outline-none z-[101]">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <img id="modal-image" src="" alt="תמונה מוגדלת" class="max-w-[95vw] max-h-[85vh] object-contain rounded-xl shadow-2xl transition-transform duration-300 transform scale-95" onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        // מאגר המידע - מוקפד, מפורט ועקבי לכל פריט, כעת כולל משך בנייה וגורל סופי
+        const wonders = [
+            {
+                name: "הפירמידה הגדולה של גיזה",
+                etymology: "מקור המילה 'פירמידה' הוא מיוונית (Pyramis). במקור המצרי העתיק נקראה הפירמידה 'אחט ח'ופו', שמשמעותו 'האופק של ח'ופו'. זהו פלא העולם העתיק היחיד ששרד.",
+                builder: "פרעה ח'ופו, שמלך במצרים העתיקה בתקופת השושלת הרביעית (תקופת שלטון מוערכת: 2589 – 2566 לפנה\"ס).",
+                duration: "הבנייה נמשכה על פי ההערכות בין 20 ל-27 שנים במהלך תקופת שלטונו של פרעה ח'ופו במאה ה-26 לפנה\"ס.",
+                reason: "הוקמה כקבר מונומנטלי ומשכן נצחי עבור פרעה ח'ופו, שנועד להבטיח ולפאר את מעברו המוצלח של המלך לעולם הבא, יחד עם אוצרותיו.",
+                fate: "זהו פלא העולם העתיק היחיד ששרד כמעט בשלמותו עד ימינו. עם זאת, לאורך אלפי השנים, הפירמידה איבדה את ציפוי אבן הגיר הלבנה והחלקה שלה (שנלקחה לשם בניית העיר קהיר) ואת אבן הראשה (הפירמידיון) שהייתה כנראה מצופה בזהב. כיום האתר מהווה מוקד תיירות עולמי היסטורי ונמצא תחת שימור מחמיר.",
+                dimensions: "גובהה המקורי היה כ-146.6 מטרים (כיום 138.8 מטרים עקב אובדן אבן הראשה והציפוי). אורך כל צלע בבסיס הוא כ-230.4 מטרים. היא בנויה מכ-2.3 מיליון גושי אבן.",
+                materials: "ליבת המבנה עשויה מאבני גיר מקומיות. חדר הקבורה המלכותי בנוי מגושי גרניט אדומים ענקיים שהובאו מאסואן, ובמקור הפירמידה צופתה באבן גיר לבנה וחלקה מטורה.",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Kheops-Pyramid.jpg/800px-Kheops-Pyramid.jpg"
+            },
+            {
+                name: "הקולוסיאום",
+                etymology: "נקרא במקור 'האמפיתיאטרון הפלאבי' על שם השושלת הפלאבית. השם 'קולוסיאום' ניתן לו מאוחר יותר, ככל הנראה על שם 'הקולוסוס של נירון' – פסל ענק של הקיסר נירון שניצב בסמוך אליו.",
+                builder: "הקיסר אספסיאנוס (9 לספירה - 79 לספירה) החל את הבנייה בשנת 70 לספירה, ובנו הקיסר טיטוס (39 לספירה - 81 לספירה) השלים וחנך אותו בשנת 80 לספירה.",
+                duration: "כ-10 שנים של בנייה אינטנסיבית. הבנייה החלה בשנת 70 לספירה, המבנה נחנך ב-80 לספירה, ועבודות הרחבה ושיפוץ (כמו בניית המפלסים התת-קרקעיים) נמשכו גם בימי הקיסר דומיטיאנוס עד שנת 96 לספירה.",
+                reason: "נבנה כדי לספק בידור להמונים (לחם ושעשועים), לקיים קרבות גלדיאטורים, ציד חיות בר ושחזורי קרבות היסטוריים, וכן כהפגנת כוחה העצום וכישוריה ההנדסיים של האימפריה הרומית.",
+                fate: "המבנה ניזוק קשות לאורך מאות השנים עקב מספר רעידות אדמה ושריפות. הפגיעה הקשה ביותר הייתה שוד אבנים מסיבי בימי הביניים ובתקופת הרנסאנס, אז שימשו אבניו לבניית כנסיות וארמונות ברומא. כיום נותר קצת יותר משליש מהמבנה המקורי, אך הוא עבר תהליכי שימור ארוכים והוא עדיין אחד מאתרי התיירות האייקוניים והמתוירים בעולם.",
+                dimensions: "אמפיתיאטרון אליפטי. אורכו 189 מטרים, רוחבו 156 מטרים, וגובהו כ-48 מטרים. הכיל מקומות ישיבה לכ-50,000 עד 80,000 צופים.",
+                materials: "נבנה בעיקר מבטון רומאי, אבן טוף (אבן געשית קלה), אבן טרוורטין (אבן גיר חזקה במיוחד ששימשה לעמודים ולקירות החיצוניים), ולבנים מקומיות.",
+                image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                name: "החומה הסינית הגדולה",
+                etymology: "בסינית מוכרת בשם 'צ'אנגצ'נג' (Changcheng) שמשמעותו 'החומה הארוכה', או 'החומה של עשרת אלפים לי' (לי היא יחידת מידה סינית עתיקה), לציון אורכה העצום והבלתי נתפס.",
+                builder: "נבנתה על ידי קיסרים ושושלות רבות לאורך מאות שנים. המפורסם והראשון שאיחד את חלקי החומה למערכת אחת היה הקיסר צ'ין שי חואנג (259 לפנה\"ס - 210 לפנה\"ס).",
+                duration: "בניית החומה על כל שלוחותיה נמשכה למעלה מ-2,000 שנים. היא החלה באופן מקומי כבר במאה ה-7 לפנה\"ס, ופרויקטי הבנייה והביצור הגדולים ביותר שלה נמשכו עד סוף תקופת שושלת מינג (1644 לספירה).",
+                reason: "מערכת ביצורים שנועדה להגנה צבאית על האימפריה הסינית מפני פלישות ומסעות ביזה של שבטים נוודים מהצפון ומהערבות (כגון המונגולים וההונים).",
+                fate: "מצבה של החומה כיום מעורב. חלקים נרחבים מאוד ממנה (במיוחד המוקדמים יותר) נהרסו לחלוטין, נשחקו מפגעי מזג האוויר או שפורקו על ידי כפריים לטובת חומרי בניין לבתיהם. עם זאת, מקטעים רבים הבנויים מלבנים ואבן, בעיקר אלו שנבנו בתקופת שושלת מינג סמוך לבייג'ינג, שומרו ושוחזרו בהצלחה רבה והם מהווים כיום אתר מורשת עולמית תוסס.",
+                dimensions: "אורכה הכולל של החומה (כולל כל הסתעפויותיה וביצוריה הטבעיים) מוערך בכ-21,196 קילומטרים. גובהה הממוצע נע בין 5 ל-8 מטרים, ורוחב הבסיס הוא 4 עד 5 מטרים.",
+                materials: "בחלקים המוקדמים נבנתה מאדמה נגוחה (דחוסה), חצץ ועץ. בחלקים המאוחרים יותר (במיוחד מתקופת שושלת מינג) נבנתה מלבנים שרופות וגושי אבן חצובים.",
+                image: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                name: "פטרה",
+                etymology: "ביוונית המילה 'פטרוס' משמעותה 'סלע' (על שום המבנים החצובים באבן). הנבטים עצמם, בוני העיר, קראו לה ככל הנראה 'רקומו' (Reqmo) – שמשמעותו רקמה או סלע צבעוני.",
+                builder: "העם הנבטי, שבט נוודים ערבי קדום, תחת מנהיגותם של מלכים חזקים כגון חרתת הרביעי (9 לפנה\"ס - 40 לספירה), שתחת שלטונו הגיעה העיר לשיא תפארתה.",
+                duration: "תהליך הבנייה והחציבה נמשך מאות שנים. ההתיישבות החלה כנראה סביב המאה ה-4 לפנה\"ס, אך פרויקטי החציבה המונומנטליים באבן הגיעו לשיאם בין המאה ה-1 לפנה\"ס ועד למאה ה-1 לספירה.",
+                reason: "שימשה כעיר הבירה המפוארת של הממלכה הנבטית וכמרכז סחר אסטרטגי, עשיר ומשגשג ששלט על 'נתיב הבשמים' העתיק שהוביל מחצי האי ערב לים התיכון.",
+                fate: "לאחר סדרת רעידות אדמה הרסניות (במיוחד בשנת 363 לספירה שפגעה במערכת המים) ושינוי מהותי בנתיבי הסחר הימיים שעקפו אותה, העיר ירדה מגדולתה, ננטשה אט אט ונשכחה לחלוטין מהעולם המערבי. היא התגלתה מחדש רק בשנת 1812 על ידי החוקר השוויצרי יוהאן לודוויג בורקהרדט. כיום היא מוגדרת כאתר מורשת עולמית, והיא האתר המתויר ביותר בירדן.",
+                dimensions: "העיר עצומה בגודלה. המבנה המפורסם ביותר, חזית 'האוצר' (אל-ח'זנה), מתנשא לגובה של כ-39 מטרים ולרוחב של כ-25 מטרים.",
+                materials: "המבנים המרכזיים לא נבנו, אלא נחצבו ישירות לתוך צוקי אבן החול האדומה והוורודה המאפיינת את הרי אדום (ומכאן הכינוי 'העיר הוורודה').",
+                image: "https://upload.wikimedia.org/wikipedia/commons/9/9a/Petra_Jordan_BW_37.JPG"
+            },
+            {
+                name: "הטאג' מהאל",
+                etymology: "מקור השם מפרסית ואורדו, ומשמעותו 'כתר הארמון' (Taj = כתר, Mahal = ארמון או אחוזה). המבנה נקרא לזכרה של מומתאז מהאל, אשתו האהובה של הקיסר.",
+                builder: "הקיסר המוגולי שאה ג'האן (1592 - 1666), אשר גייס כ-20,000 פועלים, אומנים ואדריכלים מכל רחבי אסיה לבניית הפרויקט.",
+                duration: "כ-22 שנים. מלאכת הבנייה של המבנה המרכזי החלה בשנת 1631 או 1632, והושלמה ברובה עד 1643. בניית קומפלקס הגנים והמבנים ההיקפיים הסתיימה סופית סביב שנת 1653.",
+                reason: "נבנה כמאוזוליאום (מבנה קבורה) מונומנטלי שהוקם כסמל לאהבתו העזה וצערות העמוק לזכרה של אשתו, מומתאז מהאל, שמתה בשנת 1631 במהלך לידת ילדם ה-14.",
+                fate: "המבנה שרד בשלמותו במשך מאות שנים ונחשב לפנינה אדריכלית. עם זאת, בעשורים האחרונים הוא סובל מאיומים מודרניים: זיהום אוויר תעשייתי קיצוני מאגרה גורם להצהבה ושחיקה של השיש הלבן. כתגובה, ממשלת הודו הקימה רצועת הגנה אקולוגית סביב האתר ומפעילה מבצעי ניקוי קבועים (שימוש במסכות חימר מיוחדות) כדי לשמר את לובנו. זהו עדיין אחד מסמליה הבולטים של הודו.",
+                dimensions: "גובה המבנה המרכזי בעל הכיפה הוא כ-73 מטרים. הוא ניצב על פלטפורמה מרובעת שאורך צלעותיה הוא 55 מטרים. האתר כולו משתרע על פני כ-170 דונם.",
+                materials: "השלד בנוי מלבנים מחופות בלוחות שיש לבן ובוהק שהובא מראג'סטאן. השיש משובץ בטכניקת 'פייטרה דורה' ב-28 סוגים של אבנים יקרות למחצה (כגון לפיס לזולי, טורקיז, וקריסטל).",
+                image: "https://upload.wikimedia.org/wikipedia/commons/c/c8/Taj_Mahal_in_March_2004.jpg"
+            },
+            {
+                name: "פסל ישו הגואל",
+                etymology: "בפורטוגזית 'Cristo Redentor'. השם מסמל באופן ישיר את דמותו של ישו הנוצרי כגואל האנושות, הפורש את ידיו כדי לחבק ולגונן על העיר ריו דה ז'ניירו.",
+                builder: "תוכנן על ידי המהנדס הברזילאי הייטור דה סילבה קושטה (1873-1947) ופוסל על ידי הפסל הצרפתי פול לנדובסקי (1875-1961), יחד עם מהנדסים נוספים.",
+                duration: "כ-9 שנים. אבן הפינה הונחה ב-4 באפריל 1922, והפסל נחנך רשמית ונפתח לקהל ב-12 באוקטובר 1931.",
+                reason: "נבנה כסמל דתי המבטא את הנוכחות והרוחניות הנוצרית בברזיל. היוזמה המקורית נועדה לציין את חגיגות שנת המאה לעצמאות ברזיל (שהתקיימו ב-1922).",
+                fate: "הפסל ניצב גאה ושלם במרומי הר הקורקובדו ומהווה את הסמל הבלתי מעורער של ריו דה ז'ניירו וברזיל כולה. בשל גובהו ומיקומו, הוא משמש ככליא ברק טבעי וסופג עשרות פגיעות ברקים בשנה (אשר פוגעות לעיתים בקצות האצבעות או בראש הפסל), דבר המצריך עבודות תחזוקה, שיקום ושחזור מתמידות של אריחי אבן הסבון.",
+                dimensions: "גובה הפסל עצמו הוא 30 מטרים, והוא ניצב על כן שגובהו 8 מטרים נוספים (סה\"כ 38 מטרים). מוטת הידיים הפרושות היא 28 מטרים, ומשקלו הכולל מוערך בכ-635 טון.",
+                materials: "השלד הפנימי עשוי מבטון מזוין כדי לעמוד ברוחות העזות בפסגת ההר. החלק החיצוני מצופה במיליוני אריחים קטנים ומשולשים של אבני סטיאטיט (אבן סבון) המגינות מפני פגעי מזג האוויר.",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Christ_the_Redeemer_-_Cristo_Redentor.jpg/800px-Christ_the_Redeemer_-_Cristo_Redentor.jpg"
+            },
+            {
+                name: "מאצ'ו פיצ'ו",
+                etymology: "מקור השם הוא בשפת הקצ'ואה (שפת אימפריית האינקה). 'Machu' פירושו ישן או עתיק, ו-'Picchu' פירושו הר או פסגה. כלומר: 'ההר הישן' או 'הפסגה העתיקה'.",
+                builder: "נבנתה ככל הנראה ביוזמתו של קיסר האינקה הגדול פאצ'אקוטי (1438 - 1471), וננטשה כמאה שנים מאוחר יותר בעת הכיבוש הספרדי.",
+                duration: "ההערכה הארכיאולוגית היא שתהליך הבנייה נמשך בין 50 ל-80 שנים, החל מסביבות שנת 1450 ועד לעצירת העבודות (ונטישת האתר) בסמוך לאמצע המאה ה-16.",
+                reason: "החוקרים מאמינים כי האתר שימש כאחוזה מלכותית ומפלט מסתור עבור קיסר האינקה ומקורביו, וכן כמרכז דתי, חקלאי ואסטרונומי מקודש במרומי האנדים.",
+                fate: "העיר ננטשה במהירות בסמוך לזמן הכיבוש הספרדי של אימפריית האינקה, אך למרבה המזל, הכובשים הספרדים מעולם לא גילו אותה ולכן היא לא נהרסה או נבזזה. האתר נבלע בתוך צמחיית הג'ונגל הסבוכה, עד שהתגלה (מחדש לעולם המערבי) ב-1911 על ידי ההיסטוריון היירם בינגהאם. כיום היא מתוחזקת היטב ומוכרת כאתר הארכיאולוגי המפורסם ביותר בדרום אמריקה.",
+                dimensions: "האתר משתרע על פני שטח תלול של כ-32,500 דונם. הוא ממוקם בגובה של 2,430 מטרים מעל פני הים וכולל כ-200 מבנים שונים, טרסות חקלאיות ומערכות מים מורכבות.",
+                materials: "העיר נבנתה מאבני גרניט כבדות. אומני האינקה סיתתו את האבנים בקפידה רבה כך שהן משתלבות זו בזו באופן מושלם ללא שימוש במלט (שיטת בנייה המכונה בנייה יבשה), מה שהקנה למבנים עמידות מפני רעידות אדמה.",
+                image: "https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                name: "צ'יצ'ן איצה",
+                etymology: "שם המורכב ממילים משפת המאיה: 'Chi' (פיות), 'chen' (בארות), ו-'Itza' (שם השבט שחי באזור). המשמעות המקובלת היא 'על פי בארות (שבט) האיצה', בהתייחס לסנוטות (בולעני המים) במקום.",
+                builder: "נבנתה והורחבה לאורך מאות שנים על ידי בני המאיה והטולטקים. המבנה המרכזי מיוחס גם למנהיג המיתולוגי/היסטורי קוקולקאן (המאה ה-10 לספירה).",
+                duration: "בניית העיר והרחבתה לא התבצעו בבת אחת, אלא התפרסו על פני מספר מאות שנים, החל מהקמתה במאה ה-6 לספירה, דרך שיא שגשוגה, ועד לשקיעתה סביב המאה ה-13.",
+                reason: "שימשה כמרכז פוליטי, דתי, תרבותי וכלכלי מרכזי של צפון חצי האי יוקטן. האתר כולל מקדשים ששימשו להקרבת קורבנות, מצפה כוכבים, ומגרש למשחקי כדור פולחניים.",
+                fate: "העיר דעכה וננטשה בהדרגה הרבה לפני הגעת הספרדים למקסיקו, והג'ונגל הטרופי כיסה לחלוטין את מרבית מבניה המונומנטליים. החל מהמאה ה-19 החלו חפירות ארכיאולוגיות מקיפות. כיום, מרבית האזור המרכזי של העיר (ובהם פירמידת קוקולקאן, מקדש הלוחמים ומגרש הכדור) משוחזרים ברמה גבוהה מאוד. האתר מהווה את אחת האטרקציות התיירותיות המרכזיות של מקסיקו.",
+                dimensions: "פירמידת קוקולקאן (המכונה אל קסטיליו) המרכזית מתנשאת לגובה של 24 מטרים (ועוד 6 מטרים של המקדש בראשה). רוחב בסיסה המרובע הוא כ-55.3 מטרים. יש בה 365 מדרגות בסך הכל.",
+                materials: "בנויה מאבן גיר קשה המסותתת היטב, חומר גלם הנפוץ מאוד באזור חצי האי יוקטן במקסיקו, שאפשר חריטה וגילוף של תבליטים מורכבים.",
+                image: "https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=800&q=80"
+            }
+        ];
+
+        // פונקציה לייצור כרטיסיות ה-HTML עם אנימציה
+        function renderWonders() {
+            const container = document.getElementById('wonders-container');
+            
+            wonders.forEach((wonder, index) => {
+                const card = document.createElement('article');
+                card.className = `bg-gray-850 rounded-2xl overflow-hidden shadow-2xl border border-gray-800 transition-all duration-300 hover:-translate-y-2 hover:shadow-blue-900/20 flex flex-col card-animate opacity-0`;
+                card.style.animationDelay = `${index * 0.15}s`;
+                
+                card.innerHTML = `
+                    <div class="relative h-60 sm:h-72 w-full overflow-hidden group border-b border-gray-800 cursor-pointer" onclick="openImageModal('${wonder.image}')">
+                        <img src="${wonder.image}" alt="תמונה של ${wonder.name}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                        </div>
+                    </div>
+                    <div class="p-6 sm:p-8 flex-1 flex flex-col gap-5 text-sm sm:text-base text-gray-300">
+                        
+                        <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-emerald-400 drop-shadow-sm mb-2">${wonder.name}</h2>
+
+                        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800/50">
+                            <span class="flex items-center gap-2 font-bold text-emerald-400 mb-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
+                                פירוש ומקור השם
+                            </span>
+                            <p class="leading-relaxed text-gray-400">${wonder.etymology}</p>
+                        </div>
+
+                        <div>
+                            <span class="block font-bold text-blue-400 mb-1">שם הבונה:</span>
+                            <p class="leading-relaxed">${wonder.builder}</p>
+                        </div>
+
+                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+
+                        <div>
+                            <span class="block font-bold text-yellow-400 mb-1">משך הבנייה:</span>
+                            <p class="leading-relaxed">${wonder.duration}</p>
+                        </div>
+
+                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+
+                        <div>
+                            <span class="block font-bold text-blue-400 mb-1">סיבת הבנייה:</span>
+                            <p class="leading-relaxed">${wonder.reason}</p>
+                        </div>
+
+                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+
+                        <div>
+                            <span class="block font-bold text-red-400 mb-1">גורל סופי (סטטוס כיום):</span>
+                            <p class="leading-relaxed">${wonder.fate}</p>
+                        </div>
+
+                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-900 p-4 rounded-xl border border-gray-800 mt-auto">
+                            <div>
+                                <span class="block font-bold text-purple-400 mb-2">מידות:</span>
+                                <p class="leading-relaxed text-sm text-gray-400">${wonder.dimensions}</p>
+                            </div>
+                            <div>
+                                <span class="block font-bold text-orange-400 mb-2">חומרים:</span>
+                                <p class="leading-relaxed text-sm text-gray-400">${wonder.materials}</p>
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // הפעלת הפונקציה בעת טעינת העמוד
+        document.addEventListener('DOMContentLoaded', renderWonders);
+
+        // פונקציות לפתיחה וסגירה של חלון הגדלת התמונה (Lightbox)
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-image');
+            
+            modalImg.src = imageSrc;
+            modal.classList.remove('hidden');
+            
+            // יצירת Reflow כדי שהאנימציה תעבוד בצורה חלקה
+            void modal.offsetWidth;
+            
+            modal.classList.replace('opacity-0', 'opacity-100');
+            modalImg.classList.replace('scale-95', 'scale-100');
+            document.body.style.overflow = 'hidden'; // מניעת גלילה של הרקע כשחלון פתוח
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-image');
+            
+            modal.classList.replace('opacity-100', 'opacity-0');
+            modalImg.classList.replace('scale-100', 'scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modalImg.src = '';
+                document.body.style.overflow = ''; // החזרת אפשרות הגלילה
+            }, 300); // ממתין לסיום אנימציית הסגירה
+        }
+    </script>
+</body>
+</html>
