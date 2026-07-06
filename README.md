@@ -1,116 +1,103 @@
-World Wonders App 🌍🏛️
+# Universal Knowledge Atlas 🌍
 
+A free, multilingual, browser-based knowledge website designed for GitHub Pages.
 
-​יישום אינטרנט (Single Page Application) מרהיב ואינטראקטיבי המציג את פלאי העולם העתיק והחדש. הפרויקט משלב אהבה עמוקה להיסטוריה וארכיטקטורה יחד עם פיתוח ממשק משתמש מודרני, חלק ומוקפד.
+The site lets users search for a **person, animal, place, monument, city, river, mountain, or other topic** and receive a clear result with:
 
+- a short summary from Wikipedia,
+- a representative image when available,
+- a source link,
+- a simple interactive map when coordinates are available,
+- a navigation link to the location when relevant,
+- a multilingual interface.
 
-​אודות הפרויקט 📜
+## Purpose
 
+The goal of this project is to create a simple educational search tool that gathers essential public information in one friendly page. It is suitable for students, travelers, history lovers, geography lovers, nature lovers, and anyone who wants a fast visual overview of a topic.
 
-​היישום נועד לקחת את המשתמש למסע היסטורי ותרבותי אל המבנים המונומנטליים ביותר שיצרה האנושות. כל "פלא עולם" מוצג בכרטיסייה מעוצבת המכילה מחקר מקיף, כולל עובדות היסטוריות, טכניות וארכיטקטוניות.
+## Current version
 
+This is the first starter version. It includes:
 
-​תכונות מרכזיות (Features) ✨
+- `index.html` as a single-page application.
+- Hebrew interface by default.
+- Language selector.
+- Wikipedia summary search.
+- Image display.
+- Leaflet + OpenStreetMap map display.
+- Google Maps route link when coordinates exist.
+- Fully static frontend code, suitable for GitHub Pages.
 
+## Technologies
 
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Wikipedia APIs
+- Leaflet
+- OpenStreetMap map tiles
+- GitHub Pages
 
+## How to use
 
+1. Open the website.
+2. Type a search term, for example: `Eiffel Tower`, `Aristotle`, `Lion`, or `Jerusalem`.
+3. Press **Search**.
+4. Read the summary, view the image, and open the map or route if available.
 
-​מידע היסטורי מקיף ועמוק: כל כרטיסייה כוללת את:
+## Notes
 
+Some Wikipedia pages do not include geographic coordinates. In those cases, the result will still show text and image information, but the map will not point to an exact location. A future version can add OpenStreetMap/Nominatim geocoding for place-name lookup.
 
+---
 
-​שם הפלא.
+# אטלס ידע עולמי 🌍
 
+אתר ידע חינמי, רב־לשוני, הפועל ישירות בדפדפן ומתאים לאחסון ב־GitHub Pages.
 
-​אטימולוגיה (פירוש, מקור ומשמעות השם).
+האתר מאפשר למשתמש לחפש **אדם, בעל חיים, מקום, מבנה, עיר, נהר, הר או נושא אחר**, ולקבל תוצאה ברורה עם:
 
+- תקציר קצר מוויקיפדיה,
+- תמונה מייצגת כאשר קיימת,
+- קישור למקור המידע,
+- מפה אינטראקטיבית פשוטה כאשר קיימות קואורדינטות,
+- קישור לניווט כאשר מדובר במיקום,
+- ממשק רב־לשוני.
 
-​שם הבונה ושנות חייו.
+## מטרת האתר
 
+מטרת הפרויקט היא ליצור כלי חיפוש לימודי, פשוט ונוח, המרכז מידע ציבורי בסיסי בעמוד אחד ידידותי. האתר מתאים לתלמידים, מטיילים, חובבי היסטוריה, חובבי גאוגרפיה, חובבי טבע וכל מי שרוצה לקבל במהירות מידע חזותי וברור על נושא מסוים.
 
-​משך הבנייה המוערך.
+## הגרסה הנוכחית
 
+זוהי גרסת התחלה ראשונה. היא כוללת:
 
-​סיבת הבנייה.
+- קובץ `index.html` כאפליקציית עמוד אחד.
+- ממשק עברי כברירת מחדל.
+- בורר שפות.
+- חיפוש תקצירי ויקיפדיה.
+- הצגת תמונה.
+- הצגת מפה באמצעות Leaflet ו־OpenStreetMap.
+- קישור למסלול ב־Google Maps כאשר קיימות קואורדינטות.
+- קוד סטטי מלא שמתאים ל־GitHub Pages.
 
+## טכנולוגיות
 
-​מידות מפורטות.
+- HTML5
+- CSS3
+- JavaScript נקי
+- ממשקי Wikipedia
+- Leaflet
+- OpenStreetMap
+- GitHub Pages
 
+## איך משתמשים?
 
-​חומרי בנייה.
+1. נכנסים לאתר.
+2. מקלידים שם, לדוגמה: `מגדל אייפל`, `אריסטו`, `אריה` או `ירושלים`.
+3. לוחצים על **חפש**.
+4. קוראים את התקציר, רואים את התמונה, ואם קיים מיקום — פותחים מפה או מסלול.
 
+## הערות
 
-​הגורל הסופי (הסטטוס של המבנה כיום).
-
-
-
-
-
-
-​עיצוב מודרני ומוקפד (Dark Mode): ממשק המבוסס על גוונים כהים (Dark Theme) המעניק מראה פרימיום ומקל על הקריאה.
-
-
-​אופטימיזציית מובייל מושלמת: תמיכה ורספונסיביות מלאה למסכים מתקדמים ברזולוציה גבוהה (מותאם במיוחד למכשירי דגל כמו Samsung S25 Ultra), כולל התאמה ל-Safe Areas וגלילה חלקה.
-
-
-​מערכת תמונות אינטראקטיבית (Lightbox): אפשרות להגדלת כל תמונה למסך מלא בלחיצה, מלווה באנימציות הופעה חלקות ורקע מטושטש (Backdrop Blur).
-
-
-​אנימציות (Animations): הופעה מדורגת וחלקה של הכרטיסיות בעת טעינת העמוד (Staggered Fade-in).
-
-
-
-
-​טכנולוגיות (Tech Stack) 💻
-
-
-​הפרויקט נבנה בקובץ אחד (index.html) כדי לשמור על פשטות, מהירות וקלות שימוש, תוך שימוש בטכנולוגיות הבאות:
-
-
-
-
-​HTML5: מבנה סמנטי ונגיש.
-
-
-​Vanilla JavaScript (ES6+): לוגיקה, הזרקת תוכן דינמי (DOM Manipulation), ומערכת ה-Lightbox.
-
-
-​Tailwind CSS: ספריית Utility-first לעיצוב רספונסיבי, אנימציות וניהול צבעים (מוטמעת באמצעות CDN).
-
-
-​גופני Google (Google Fonts): שימוש בגופן 'Heebo' לקריאה אופטימלית של טקסט בעברית.
-
-
-
-
-​איך להפעיל את הפרויקט? 🚀
-
-
-​מכיוון שהפרויקט כתוב בטכנולוגיות צד-לקוח טהורות (Frontend) וכלול בקובץ אחד, אין צורך בהתקנות מסובכות או בשרת.
-
-
-
-
-​הורד או שכפל (Clone) את המאגר.
-
-
-​פתח את הקובץ wonders_app.html (או index.html אם שינית את שמו) בכל דפדפן מודרני.
-
-
-​תהנה מהמסע ההיסטורי!
-
-
-
-
-​מקורות מידע 📚
-
-
-​המידע ההיסטורי ביישום אומת מול מקורות אמינים ומוכרים, ביניהם: מאגרי אונסק"ו (UNESCO), האנציקלופדיה הבריטניקה, רשויות עתיקות מקומיות (מצרים, ירדן, פרו, מקסיקו ועוד), ומחקרים אקדמיים נבחרים.
-
-
-​נוצר על ידי: רם.
-
-
-פרויקט זה נוצר תוך שילוב של יצירה באמצעות בינה מלאכותית יחד עם תשוקה לקריאת היסטוריה, ביוגרפיות ורומנים היסטוריים.
-
+לא לכל ערך בוויקיפדיה קיימות קואורדינטות. במקרים כאלה האתר יציג טקסט ותמונה, אך לא יצביע על מיקום מדויק במפה. בגרסה עתידית אפשר להוסיף חיפוש מיקום דרך OpenStreetMap/Nominatim.
