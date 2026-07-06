@@ -3,30 +3,17 @@ export default async function handler(request, response) {
     const { q = '', lang = 'he' } = request.query;
     const safeLang = /^[a-z-]{2,12}$/i.test(lang) ? lang : 'he';
     const query = String(q || '').trim();
-
     if (!query) return response.status(400).json({ error: 'Missing search query' });
 
-    const wikiUrl =
-      `https://${safeLang}.wikipedia.org/w/api.php` +
-      `?action=query&generator=search` +
-      `&gsrsearch=${encodeURIComponent(query)}` +
-      `&gsrlimit=1` +
-      `&prop=extracts|pageimages|coordinates|info|pageprops` +
-      `&exintro=1&explaintext=1&exchars=900` +
-      `&piprop=thumbnail|original&pithumbsize=900` +
-      `&inprop=url&format=json`;
-
+    const wikiUrl = `https://${safeLang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=extracts|pageimages|coordinates|info|pageprops&exintro=1&explaintext=1&exchars=900&piprop=thumbnail|original&pithumbsize=900&inprop=url&format=json`;
     const wikiResponse = await fetch(wikiUrl, { headers: { 'User-Agent': 'UniversalKnowledgeAtlas/1.0' } });
     if (!wikiResponse.ok) return response.status(502).json({ error: 'Wikipedia request failed' });
 
     const data = await wikiResponse.json();
-    const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
-    const page = pages[0];
-
+    const page = data?.query?.pages ? Object.values(data.query.pages)[0] : null;
     if (page) {
       let imageUrl = page.original?.source || page.thumbnail?.source || null;
       const itemId = page.pageprops?.wikibase_item || null;
-
       if (itemId) {
         const wd = await getWikidataFacts(itemId, safeLang);
         page.wikidataId = itemId;
@@ -35,7 +22,6 @@ export default async function handler(request, response) {
         page.entityKind = wd.entityKind;
         if (!imageUrl && wd.imageUrl) imageUrl = wd.imageUrl;
       }
-
       if (!imageUrl) imageUrl = await getCommonsSearchImage(page.title);
       if (imageUrl) {
         page.imageUrl = imageUrl;
@@ -43,7 +29,6 @@ export default async function handler(request, response) {
         page.thumbnail = { source: imageUrl };
       }
     }
-
     return response.status(200).json(data);
   } catch (error) {
     return response.status(500).json({ error: 'Server error', details: String(error?.message || error) });
@@ -55,75 +40,94 @@ async function getWikidataFacts(itemId, lang) {
   if (!entity) return { facts: [], entityType: '', entityKind: 'general', imageUrl: null };
 
   const claims = entity.claims || {};
-  const labelIds = collectEntityIds(claims, ['P31','P279','P105','P17','P36','P106','P171','P141','P27','P19','P20','P37','P38','P30','P131','P706','P403','P885','P4614']);
+  const labelIds = collectEntityIds(claims, ['P31','P105','P17','P36','P106','P171','P141','P27','P19','P20','P37','P38','P30','P131','P706','P403','P885']);
   const labels = await fetchLabels(labelIds, lang);
   const facts = [];
   let imageUrl = null;
 
-  const getValue = (pid) => claims[pid]?.[0]?.mainsnak?.datavalue?.value;
-  const getValues = (pid) => (claims[pid] || []).map(c => c?.mainsnak?.datavalue?.value).filter(Boolean);
-  const getId = (pid) => getValue(pid)?.id;
-  const getIds = (pid) => getValues(pid).map(v => v?.id).filter(Boolean);
+  const valueOf = (pid) => bestClaim(claims[pid])?.mainsnak?.datavalue?.value;
+  const valuesOf = (pid) => bestClaims(claims[pid]).map(c => c?.mainsnak?.datavalue?.value).filter(Boolean);
+  const idOf = (pid) => valueOf(pid)?.id;
+  const idsOf = (pid) => valuesOf(pid).map(v => v?.id).filter(Boolean);
   const labelOf = (id) => labels[id] || friendlyFallback(id, lang);
-  const add = (labelHe, labelEn, value) => { if (value) facts.push({ label: lang === 'en' ? labelEn : labelHe, value }); };
-  const addId = (pid, labelHe, labelEn) => { const id = getId(pid); if (id) add(labelHe, labelEn, labelOf(id)); };
-  const addIds = (pid, labelHe, labelEn, limit = 3) => {
-    const vals = getIds(pid).slice(0, limit).map(labelOf).filter(Boolean);
-    if (vals.length) add(labelHe, labelEn, vals.join(', '));
+  const add = (labelHe, labelEn, value) => { if (value && !facts.some(f => f.label === (lang === 'en' ? labelEn : labelHe))) facts.push({ label: lang === 'en' ? labelEn : labelHe, value }); };
+  const addId = (pid, he, en) => { const id = idOf(pid); if (id) add(he, en, labelOf(id)); };
+  const addIds = (pid, he, en, limit = 3) => {
+    const vals = unique(idsOf(pid).map(labelOf).filter(Boolean)).slice(0, limit);
+    if (vals.length) add(he, en, vals.join(', '));
   };
 
-  const imageName = getValue('P18');
+  const imageName = valueOf('P18');
   if (imageName) imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imageName)}?width=900`;
 
-  const instanceIds = getIds('P31');
+  const instanceIds = idsOf('P31');
   const entityKind = detectKind(instanceIds, claims);
-  const entityType = instanceIds.map(labelOf).filter(Boolean).slice(0,2).join(', ');
+  const entityType = cleanType(instanceIds.map(labelOf).filter(Boolean).slice(0, 2).join(', '), entityKind, lang);
   if (entityType) add('סוג הערך', 'Type', entityType);
 
   if (entityKind === 'person') {
-    add('תאריך לידה', 'Date of birth', formatWikidataDate(getValue('P569')?.time, lang));
-    add('תאריך פטירה', 'Date of death', formatWikidataDate(getValue('P570')?.time, lang));
+    add('תאריך לידה', 'Date of birth', formatWikidataDate(valueOf('P569')?.time, lang));
+    add('תאריך פטירה', 'Date of death', formatWikidataDate(valueOf('P570')?.time, lang));
     addIds('P106', 'מקצוע', 'Occupation', 4);
     addId('P27', 'אזרחות/לאום', 'Citizenship');
     addId('P19', 'מקום לידה', 'Place of birth');
     addId('P20', 'מקום פטירה', 'Place of death');
   } else if (entityKind === 'animal') {
-    add('שם מדעי', 'Scientific name', getValue('P225'));
+    add('שם מדעי', 'Scientific name', valueOf('P225'));
     addId('P105', 'דרגה טקסונומית', 'Taxon rank');
     addId('P171', 'קבוצה/משפחה', 'Parent taxon');
     addId('P141', 'מצב שימור', 'Conservation status');
-    addIds('P183', 'אזור תפוצה', 'Endemic to', 3);
   } else if (entityKind === 'country') {
     addId('P36', 'בירה', 'Capital');
-    add('אוכלוסייה', 'Population', formatNumber(getValue('P1082')?.amount));
-    add('שטח', 'Area', formatArea(getValue('P2046')?.amount, lang));
+    add('אוכלוסייה', 'Population', formatNumber(valueOf('P1082')?.amount));
+    add('שטח', 'Area', formatArea(valueOf('P2046')?.amount, lang));
     addIds('P37', 'שפה רשמית', 'Official language', 4);
     addId('P38', 'מטבע', 'Currency');
     addId('P30', 'יבשת', 'Continent');
   } else if (entityKind === 'city') {
     addId('P17', 'מדינה', 'Country');
     addId('P131', 'אזור מנהלי', 'Administrative region');
-    add('אוכלוסייה', 'Population', formatNumber(getValue('P1082')?.amount));
-    add('גובה', 'Elevation', formatMeters(getValue('P2044')?.amount, lang));
-    add('תאריך יסוד/הקמה', 'Inception', formatWikidataDate(getValue('P571')?.time, lang));
+    add('אוכלוסייה', 'Population', formatNumber(valueOf('P1082')?.amount));
+    add('גובה', 'Elevation', formatMeters(valueOf('P2044')?.amount, lang));
+    add('תאריך יסוד/הקמה', 'Inception', formatWikidataDate(valueOf('P571')?.time, lang));
   } else if (entityKind === 'mountain') {
-    add('גובה', 'Elevation', formatMeters(getValue('P2044')?.amount, lang));
+    add('גובה', 'Elevation', formatMeters(valueOf('P2044')?.amount, lang));
     addId('P17', 'מדינה', 'Country');
     addId('P706', 'רכס/אזור', 'Mountain range / location');
   } else if (entityKind === 'river') {
     addId('P17', 'מדינה', 'Country');
-    add('אורך', 'Length', formatKm(getValue('P2043')?.amount, lang));
+    add('אורך', 'Length', formatKm(valueOf('P2043')?.amount, lang));
     addId('P403', 'נשפך אל', 'Mouth of the watercourse');
     addId('P885', 'מקור הנהר', 'Origin of the watercourse');
   } else {
-    add('שם מדעי', 'Scientific name', getValue('P225'));
+    add('שם מדעי', 'Scientific name', valueOf('P225'));
     addId('P17', 'מדינה', 'Country');
-    add('אוכלוסייה', 'Population', formatNumber(getValue('P1082')?.amount));
-    add('תאריך יסוד/הקמה', 'Inception', formatWikidataDate(getValue('P571')?.time, lang));
+    add('אוכלוסייה', 'Population', formatNumber(valueOf('P1082')?.amount));
+    add('תאריך יסוד/הקמה', 'Inception', formatWikidataDate(valueOf('P571')?.time, lang));
     addIds('P106', 'מקצוע', 'Occupation', 3);
   }
 
   return { facts: facts.slice(0, 10), entityType, entityKind, imageUrl };
+}
+
+function bestClaim(list = []) {
+  const ranked = bestClaims(list);
+  return ranked[0] || null;
+}
+
+function bestClaims(list = []) {
+  if (!Array.isArray(list) || !list.length) return [];
+  const preferred = list.filter(c => c.rank === 'preferred');
+  const normal = list.filter(c => c.rank !== 'deprecated');
+  const source = preferred.length ? preferred : normal;
+  return [...source].sort((a, b) => claimYear(b) - claimYear(a));
+}
+
+function claimYear(claim) {
+  const raw = claim?.qualifiers?.P585?.[0]?.datavalue?.value?.time || claim?.qualifiers?.P580?.[0]?.datavalue?.value?.time || '';
+  const m = String(raw).match(/^([+-])(\d+)/);
+  if (!m) return 0;
+  return (m[1] === '-' ? -1 : 1) * Number(m[2]);
 }
 
 async function fetchWikidataEntity(itemId) {
@@ -136,11 +140,9 @@ async function fetchWikidataEntity(itemId) {
 
 function collectEntityIds(claims, pids) {
   const ids = new Set();
-  for (const pid of pids) {
-    for (const claim of claims[pid] || []) {
-      const id = claim?.mainsnak?.datavalue?.value?.id;
-      if (id) ids.add(id);
-    }
+  for (const pid of pids) for (const claim of bestClaims(claims[pid] || [])) {
+    const id = claim?.mainsnak?.datavalue?.value?.id;
+    if (id) ids.add(id);
   }
   return [...ids];
 }
@@ -163,12 +165,20 @@ function detectKind(instanceIds, claims) {
   const set = new Set(instanceIds);
   const has = (...ids) => ids.some(id => set.has(id));
   if (has('Q5')) return 'person';
-  if (claims.P225 || claims.P105 || claims.P171 || has('Q16521','Q729','Q55983715')) return 'animal';
   if (has('Q6256','Q3624078')) return 'country';
-  if (has('Q515','Q1549591','Q3957')) return 'city';
+  if (has('Q515','Q1549591','Q3957','Q486972')) return 'city';
   if (has('Q8502','Q46831')) return 'mountain';
   if (has('Q4022','Q355304')) return 'river';
+  if (claims.P225 || claims.P105 || claims.P171 || has('Q16521','Q729','Q55983715')) return 'animal';
   return 'general';
+}
+
+function cleanType(type, kind, lang) {
+  if (kind === 'country') return lang === 'en' ? 'country' : 'מדינה';
+  if (kind === 'city') return lang === 'en' ? 'city / settlement' : 'עיר / יישוב';
+  if (kind === 'person') return lang === 'en' ? 'person' : 'אדם';
+  if (kind === 'animal') return lang === 'en' ? 'animal / taxon' : 'בעל חיים / טקסון';
+  return type;
 }
 
 function friendlyFallback(id, lang) {
@@ -176,6 +186,8 @@ function friendlyFallback(id, lang) {
   const en = { Q5:'human', Q515:'city', Q6256:'country', Q8502:'mountain', Q4022:'river', Q16521:'taxon', Q729:'animal', Q486972:'human settlement', Q1549591:'big city' };
   return (lang === 'en' ? en[id] : he[id]) || id;
 }
+
+function unique(arr) { return [...new Set(arr)]; }
 
 function formatNumber(value) {
   if (!value) return '';
