@@ -1,295 +1,590 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <!-- הגדרה מותאמת למסכי מובייל מתקדמים כמו Samsung S25 Ultra, כולל התאמה ל-Safe Areas -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>פלאי העולם - תצוגה אינטראקטיבית</title>
-    <!-- טעינת Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        gray: {
-                            850: '#1f2937',
-                            900: '#111827',
-                            950: '#030712',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap');
-        body {
-            font-family: 'Heebo', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* עיצוב פס הגלילה לאסתטיקה תואמת מצב כהה */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #111827; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #374151; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4b5563; 
-        }
-        /* אפקט הופעה חלקה לכרטיסיות */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .card-animate {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>אטלס ידע עולמי | Universal Knowledge Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQld+HMgYnyCnotfYlM9Nn8t2rHf6Gg=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(15, 23, 42, 0.88);
+      --panel-strong: #0f172a;
+      --text: #eef6ff;
+      --muted: #a8b3c7;
+      --line: rgba(148, 163, 184, 0.22);
+      --accent: #38bdf8;
+      --accent-2: #34d399;
+      --danger: #fb7185;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Heebo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.24), transparent 34%),
+        radial-gradient(circle at 85% 5%, rgba(52, 211, 153, 0.16), transparent 32%),
+        linear-gradient(135deg, #020617 0%, var(--bg) 48%, #111827 100%);
+      line-height: 1.7;
+    }
+
+    a { color: inherit; }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 52px;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.72));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -120px auto;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.12);
+      filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 38px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #03111f;
+      font-size: 24px;
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.28);
+    }
+
+    select, input, button {
+      font: inherit;
+    }
+
+    .language-select {
+      background: rgba(15, 23, 42, 0.75);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      outline: none;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2.25rem, 7vw, 5.4rem);
+      line-height: 1.02;
+      letter-spacing: -0.055em;
+      max-width: 930px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .lead {
+      margin: 0 0 26px;
+      color: var(--muted);
+      max-width: 780px;
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      position: relative;
+      z-index: 1;
+    }
+
+    .search-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      max-width: 860px;
+      background: rgba(2, 6, 23, 0.58);
+      padding: 10px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      position: relative;
+      z-index: 1;
+    }
+
+    .search-card input {
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      padding: 14px 16px;
+      font-size: 1.08rem;
+    }
+
+    .search-card input::placeholder { color: #718096; }
+
+    .primary-btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 22px;
+      font-weight: 900;
+      color: #03111f;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      cursor: pointer;
+      transition: transform 0.18s ease, filter 0.18s ease;
+    }
+
+    .primary-btn:hover { transform: translateY(-1px); filter: brightness(1.04); }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.66);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .status {
+      min-height: 30px;
+      margin: 22px 4px 0;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 420px;
+      gap: 22px;
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .result-body { padding: 24px; }
+
+    .result-image {
+      width: 100%;
+      max-height: 430px;
+      object-fit: cover;
+      background: #0f172a;
+      display: block;
+    }
+
+    .label {
+      color: var(--accent-2);
+      font-size: 0.92rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .result-title {
+      margin: 8px 0 8px;
+      font-size: clamp(1.9rem, 4vw, 3.1rem);
+      line-height: 1.1;
+    }
+
+    .extract {
+      color: #cbd5e1;
+      font-size: 1.08rem;
+      margin-bottom: 18px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .meta-item {
+      border: 1px solid var(--line);
+      background: rgba(2, 6, 23, 0.35);
+      border-radius: 18px;
+      padding: 14px;
+      min-height: 74px;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .link-btn {
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    #map {
+      width: 100%;
+      height: 420px;
+      background: #0f172a;
+    }
+
+    .map-note {
+      padding: 16px 18px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+
+    .hidden { display: none !important; }
+
+    .empty-state {
+      margin-top: 24px;
+      padding: 24px;
+      border-radius: 24px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    footer {
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero { padding: 24px; border-radius: 24px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .search-card { grid-template-columns: 1fr; }
+      .meta { grid-template-columns: 1fr; }
+      #map { height: 340px; }
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen pt-12 pb-16 px-4 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">🌍</div>
+          <span data-i18n="brand">אטלס ידע עולמי</span>
+        </div>
+        <select id="languageSelect" class="language-select" aria-label="Language">
+          <option value="he">עברית</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="it">Italiano</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
 
-    <div class="max-w-7xl mx-auto">
-        <header class="text-center mb-16">
-            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-emerald-400 mb-6 drop-shadow-lg">
-                פלאי העולם
-            </h1>
-            <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-                מסע היסטורי, ארכיטקטוני ותרבותי אל המבנים המרשימים והמונומנטליים ביותר שיצרה האנושות לאורך ההיסטוריה.
-            </p>
-        </header>
+      <h1 data-i18n="title">חפש אדם, בעל חיים או מקום — וקבל מידע, תמונה ומפה</h1>
+      <p class="lead" data-i18n="subtitle">גרסת התחלה חינמית לאתר GitHub Pages. האתר שואב תקציר ותמונה מוויקיפדיה, ואם קיים מיקום — מציג אותו על מפה עם קישור לניווט.</p>
 
-        <main id="wonders-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10">
-            <!-- התוכן יוזרק לכאן באמצעות JavaScript -->
-        </main>
+      <form id="searchForm" class="search-card">
+        <input id="searchInput" type="search" autocomplete="off" placeholder="לדוגמה: מגדל אייפל, אריסטו, אריה" data-placeholder-key="placeholder" />
+        <button class="primary-btn" type="submit" data-i18n="searchButton">חפש</button>
+      </form>
 
-        <footer class="mt-20 pt-8 border-t border-gray-800 text-gray-500 text-sm">
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">מקורות מידע:</h3>
-            <ul class="list-disc list-inside space-y-2 opacity-80">
-                <li><strong>הקולוסיאום:</strong> מאגר המידע של ארגון אונסק"ו (UNESCO World Heritage Centre), "The Colosseum" מאת קית' הופקינס.</li>
-                <li><strong>החומה הסינית:</strong> האנציקלופדיה הבריטניקה, הרישומים ההיסטוריים של שושלת צ'ין (Shiji).</li>
-                <li><strong>פטרה:</strong> רשות העתיקות של ירדן, מחקרים ארכיאולוגיים של נלסון גליק.</li>
-                <li><strong>הטאג' מהאל:</strong> השירות הארכיאולוגי של הודו (ASI).</li>
-                <li><strong>ישו הגואל:</strong> הארכיון הלאומי של ברזיל.</li>
-                <li><strong>מאצ'ו פיצ'ו:</strong> פרסומי אוניברסיטת ייל (משלחות היירם בינגהאם), משרד התרבות של פרו.</li>
-                <li><strong>צ'יצ'ן איצה:</strong> המכון הלאומי לאנתרופולוגיה והיסטוריה של מקסיקו (INAH).</li>
-                <li><strong>פירמידת גיזה:</strong> משרד העתיקות המצרי, כתבי הרודוטוס, מחקרי אגיפטולוגיה של מארק לנר.</li>
-            </ul>
-        </footer>
-    </div>
+      <div class="examples" aria-label="Examples">
+        <button class="chip" type="button" data-example="Eiffel Tower">מגדל אייפל</button>
+        <button class="chip" type="button" data-example="Aristotle">אריסטו</button>
+        <button class="chip" type="button" data-example="Lion">אריה</button>
+        <button class="chip" type="button" data-example="Jerusalem">ירושלים</button>
+      </div>
 
-    <!-- מודל להגדלת תמונה (Lightbox) -->
-    <div id="image-modal" class="fixed inset-0 z-[100] hidden bg-gray-950/90 backdrop-blur-md flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="closeImageModal()">
-        <button onclick="closeImageModal()" class="absolute top-6 right-6 text-white bg-gray-800/60 hover:bg-gray-700 p-3 rounded-full backdrop-blur-md transition-all duration-200 focus:outline-none z-[101]">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-        <img id="modal-image" src="" alt="תמונה מוגדלת" class="max-w-[95vw] max-h-[85vh] object-contain rounded-xl shadow-2xl transition-transform duration-300 transform scale-95" onclick="event.stopPropagation()">
-    </div>
+      <div id="status" class="status" data-i18n="ready">הקלד שם ולחץ חיפוש.</div>
+    </section>
 
-    <script>
-        // מאגר המידע - מוקפד, מפורט ועקבי לכל פריט, כעת כולל משך בנייה וגורל סופי
-        const wonders = [
-            {
-                name: "הפירמידה הגדולה של גיזה",
-                etymology: "מקור המילה 'פירמידה' הוא מיוונית (Pyramis). במקור המצרי העתיק נקראה הפירמידה 'אחט ח'ופו', שמשמעותו 'האופק של ח'ופו'. זהו פלא העולם העתיק היחיד ששרד.",
-                builder: "פרעה ח'ופו, שמלך במצרים העתיקה בתקופת השושלת הרביעית (תקופת שלטון מוערכת: 2589 – 2566 לפנה\"ס).",
-                duration: "הבנייה נמשכה על פי ההערכות בין 20 ל-27 שנים במהלך תקופת שלטונו של פרעה ח'ופו במאה ה-26 לפנה\"ס.",
-                reason: "הוקמה כקבר מונומנטלי ומשכן נצחי עבור פרעה ח'ופו, שנועד להבטיח ולפאר את מעברו המוצלח של המלך לעולם הבא, יחד עם אוצרותיו.",
-                fate: "זהו פלא העולם העתיק היחיד ששרד כמעט בשלמותו עד ימינו. עם זאת, לאורך אלפי השנים, הפירמידה איבדה את ציפוי אבן הגיר הלבנה והחלקה שלה (שנלקחה לשם בניית העיר קהיר) ואת אבן הראשה (הפירמידיון) שהייתה כנראה מצופה בזהב. כיום האתר מהווה מוקד תיירות עולמי היסטורי ונמצא תחת שימור מחמיר.",
-                dimensions: "גובהה המקורי היה כ-146.6 מטרים (כיום 138.8 מטרים עקב אובדן אבן הראשה והציפוי). אורך כל צלע בבסיס הוא כ-230.4 מטרים. היא בנויה מכ-2.3 מיליון גושי אבן.",
-                materials: "ליבת המבנה עשויה מאבני גיר מקומיות. חדר הקבורה המלכותי בנוי מגושי גרניט אדומים ענקיים שהובאו מאסואן, ובמקור הפירמידה צופתה באבן גיר לבנה וחלקה מטורה.",
-                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Kheops-Pyramid.jpg/800px-Kheops-Pyramid.jpg"
-            },
-            {
-                name: "הקולוסיאום",
-                etymology: "נקרא במקור 'האמפיתיאטרון הפלאבי' על שם השושלת הפלאבית. השם 'קולוסיאום' ניתן לו מאוחר יותר, ככל הנראה על שם 'הקולוסוס של נירון' – פסל ענק של הקיסר נירון שניצב בסמוך אליו.",
-                builder: "הקיסר אספסיאנוס (9 לספירה - 79 לספירה) החל את הבנייה בשנת 70 לספירה, ובנו הקיסר טיטוס (39 לספירה - 81 לספירה) השלים וחנך אותו בשנת 80 לספירה.",
-                duration: "כ-10 שנים של בנייה אינטנסיבית. הבנייה החלה בשנת 70 לספירה, המבנה נחנך ב-80 לספירה, ועבודות הרחבה ושיפוץ (כמו בניית המפלסים התת-קרקעיים) נמשכו גם בימי הקיסר דומיטיאנוס עד שנת 96 לספירה.",
-                reason: "נבנה כדי לספק בידור להמונים (לחם ושעשועים), לקיים קרבות גלדיאטורים, ציד חיות בר ושחזורי קרבות היסטוריים, וכן כהפגנת כוחה העצום וכישוריה ההנדסיים של האימפריה הרומית.",
-                fate: "המבנה ניזוק קשות לאורך מאות השנים עקב מספר רעידות אדמה ושריפות. הפגיעה הקשה ביותר הייתה שוד אבנים מסיבי בימי הביניים ובתקופת הרנסאנס, אז שימשו אבניו לבניית כנסיות וארמונות ברומא. כיום נותר קצת יותר משליש מהמבנה המקורי, אך הוא עבר תהליכי שימור ארוכים והוא עדיין אחד מאתרי התיירות האייקוניים והמתוירים בעולם.",
-                dimensions: "אמפיתיאטרון אליפטי. אורכו 189 מטרים, רוחבו 156 מטרים, וגובהו כ-48 מטרים. הכיל מקומות ישיבה לכ-50,000 עד 80,000 צופים.",
-                materials: "נבנה בעיקר מבטון רומאי, אבן טוף (אבן געשית קלה), אבן טרוורטין (אבן גיר חזקה במיוחד ששימשה לעמודים ולקירות החיצוניים), ולבנים מקומיות.",
-                image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80"
-            },
-            {
-                name: "החומה הסינית הגדולה",
-                etymology: "בסינית מוכרת בשם 'צ'אנגצ'נג' (Changcheng) שמשמעותו 'החומה הארוכה', או 'החומה של עשרת אלפים לי' (לי היא יחידת מידה סינית עתיקה), לציון אורכה העצום והבלתי נתפס.",
-                builder: "נבנתה על ידי קיסרים ושושלות רבות לאורך מאות שנים. המפורסם והראשון שאיחד את חלקי החומה למערכת אחת היה הקיסר צ'ין שי חואנג (259 לפנה\"ס - 210 לפנה\"ס).",
-                duration: "בניית החומה על כל שלוחותיה נמשכה למעלה מ-2,000 שנים. היא החלה באופן מקומי כבר במאה ה-7 לפנה\"ס, ופרויקטי הבנייה והביצור הגדולים ביותר שלה נמשכו עד סוף תקופת שושלת מינג (1644 לספירה).",
-                reason: "מערכת ביצורים שנועדה להגנה צבאית על האימפריה הסינית מפני פלישות ומסעות ביזה של שבטים נוודים מהצפון ומהערבות (כגון המונגולים וההונים).",
-                fate: "מצבה של החומה כיום מעורב. חלקים נרחבים מאוד ממנה (במיוחד המוקדמים יותר) נהרסו לחלוטין, נשחקו מפגעי מזג האוויר או שפורקו על ידי כפריים לטובת חומרי בניין לבתיהם. עם זאת, מקטעים רבים הבנויים מלבנים ואבן, בעיקר אלו שנבנו בתקופת שושלת מינג סמוך לבייג'ינג, שומרו ושוחזרו בהצלחה רבה והם מהווים כיום אתר מורשת עולמית תוסס.",
-                dimensions: "אורכה הכולל של החומה (כולל כל הסתעפויותיה וביצוריה הטבעיים) מוערך בכ-21,196 קילומטרים. גובהה הממוצע נע בין 5 ל-8 מטרים, ורוחב הבסיס הוא 4 עד 5 מטרים.",
-                materials: "בחלקים המוקדמים נבנתה מאדמה נגוחה (דחוסה), חצץ ועץ. בחלקים המאוחרים יותר (במיוחד מתקופת שושלת מינג) נבנתה מלבנים שרופות וגושי אבן חצובים.",
-                image: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=800&q=80"
-            },
-            {
-                name: "פטרה",
-                etymology: "ביוונית המילה 'פטרוס' משמעותה 'סלע' (על שום המבנים החצובים באבן). הנבטים עצמם, בוני העיר, קראו לה ככל הנראה 'רקומו' (Reqmo) – שמשמעותו רקמה או סלע צבעוני.",
-                builder: "העם הנבטי, שבט נוודים ערבי קדום, תחת מנהיגותם של מלכים חזקים כגון חרתת הרביעי (9 לפנה\"ס - 40 לספירה), שתחת שלטונו הגיעה העיר לשיא תפארתה.",
-                duration: "תהליך הבנייה והחציבה נמשך מאות שנים. ההתיישבות החלה כנראה סביב המאה ה-4 לפנה\"ס, אך פרויקטי החציבה המונומנטליים באבן הגיעו לשיאם בין המאה ה-1 לפנה\"ס ועד למאה ה-1 לספירה.",
-                reason: "שימשה כעיר הבירה המפוארת של הממלכה הנבטית וכמרכז סחר אסטרטגי, עשיר ומשגשג ששלט על 'נתיב הבשמים' העתיק שהוביל מחצי האי ערב לים התיכון.",
-                fate: "לאחר סדרת רעידות אדמה הרסניות (במיוחד בשנת 363 לספירה שפגעה במערכת המים) ושינוי מהותי בנתיבי הסחר הימיים שעקפו אותה, העיר ירדה מגדולתה, ננטשה אט אט ונשכחה לחלוטין מהעולם המערבי. היא התגלתה מחדש רק בשנת 1812 על ידי החוקר השוויצרי יוהאן לודוויג בורקהרדט. כיום היא מוגדרת כאתר מורשת עולמית, והיא האתר המתויר ביותר בירדן.",
-                dimensions: "העיר עצומה בגודלה. המבנה המפורסם ביותר, חזית 'האוצר' (אל-ח'זנה), מתנשא לגובה של כ-39 מטרים ולרוחב של כ-25 מטרים.",
-                materials: "המבנים המרכזיים לא נבנו, אלא נחצבו ישירות לתוך צוקי אבן החול האדומה והוורודה המאפיינת את הרי אדום (ומכאן הכינוי 'העיר הוורודה').",
-                image: "https://upload.wikimedia.org/wikipedia/commons/9/9a/Petra_Jordan_BW_37.JPG"
-            },
-            {
-                name: "הטאג' מהאל",
-                etymology: "מקור השם מפרסית ואורדו, ומשמעותו 'כתר הארמון' (Taj = כתר, Mahal = ארמון או אחוזה). המבנה נקרא לזכרה של מומתאז מהאל, אשתו האהובה של הקיסר.",
-                builder: "הקיסר המוגולי שאה ג'האן (1592 - 1666), אשר גייס כ-20,000 פועלים, אומנים ואדריכלים מכל רחבי אסיה לבניית הפרויקט.",
-                duration: "כ-22 שנים. מלאכת הבנייה של המבנה המרכזי החלה בשנת 1631 או 1632, והושלמה ברובה עד 1643. בניית קומפלקס הגנים והמבנים ההיקפיים הסתיימה סופית סביב שנת 1653.",
-                reason: "נבנה כמאוזוליאום (מבנה קבורה) מונומנטלי שהוקם כסמל לאהבתו העזה וצערות העמוק לזכרה של אשתו, מומתאז מהאל, שמתה בשנת 1631 במהלך לידת ילדם ה-14.",
-                fate: "המבנה שרד בשלמותו במשך מאות שנים ונחשב לפנינה אדריכלית. עם זאת, בעשורים האחרונים הוא סובל מאיומים מודרניים: זיהום אוויר תעשייתי קיצוני מאגרה גורם להצהבה ושחיקה של השיש הלבן. כתגובה, ממשלת הודו הקימה רצועת הגנה אקולוגית סביב האתר ומפעילה מבצעי ניקוי קבועים (שימוש במסכות חימר מיוחדות) כדי לשמר את לובנו. זהו עדיין אחד מסמליה הבולטים של הודו.",
-                dimensions: "גובה המבנה המרכזי בעל הכיפה הוא כ-73 מטרים. הוא ניצב על פלטפורמה מרובעת שאורך צלעותיה הוא 55 מטרים. האתר כולו משתרע על פני כ-170 דונם.",
-                materials: "השלד בנוי מלבנים מחופות בלוחות שיש לבן ובוהק שהובא מראג'סטאן. השיש משובץ בטכניקת 'פייטרה דורה' ב-28 סוגים של אבנים יקרות למחצה (כגון לפיס לזולי, טורקיז, וקריסטל).",
-                image: "https://upload.wikimedia.org/wikipedia/commons/c/c8/Taj_Mahal_in_March_2004.jpg"
-            },
-            {
-                name: "פסל ישו הגואל",
-                etymology: "בפורטוגזית 'Cristo Redentor'. השם מסמל באופן ישיר את דמותו של ישו הנוצרי כגואל האנושות, הפורש את ידיו כדי לחבק ולגונן על העיר ריו דה ז'ניירו.",
-                builder: "תוכנן על ידי המהנדס הברזילאי הייטור דה סילבה קושטה (1873-1947) ופוסל על ידי הפסל הצרפתי פול לנדובסקי (1875-1961), יחד עם מהנדסים נוספים.",
-                duration: "כ-9 שנים. אבן הפינה הונחה ב-4 באפריל 1922, והפסל נחנך רשמית ונפתח לקהל ב-12 באוקטובר 1931.",
-                reason: "נבנה כסמל דתי המבטא את הנוכחות והרוחניות הנוצרית בברזיל. היוזמה המקורית נועדה לציין את חגיגות שנת המאה לעצמאות ברזיל (שהתקיימו ב-1922).",
-                fate: "הפסל ניצב גאה ושלם במרומי הר הקורקובדו ומהווה את הסמל הבלתי מעורער של ריו דה ז'ניירו וברזיל כולה. בשל גובהו ומיקומו, הוא משמש ככליא ברק טבעי וסופג עשרות פגיעות ברקים בשנה (אשר פוגעות לעיתים בקצות האצבעות או בראש הפסל), דבר המצריך עבודות תחזוקה, שיקום ושחזור מתמידות של אריחי אבן הסבון.",
-                dimensions: "גובה הפסל עצמו הוא 30 מטרים, והוא ניצב על כן שגובהו 8 מטרים נוספים (סה\"כ 38 מטרים). מוטת הידיים הפרושות היא 28 מטרים, ומשקלו הכולל מוערך בכ-635 טון.",
-                materials: "השלד הפנימי עשוי מבטון מזוין כדי לעמוד ברוחות העזות בפסגת ההר. החלק החיצוני מצופה במיליוני אריחים קטנים ומשולשים של אבני סטיאטיט (אבן סבון) המגינות מפני פגעי מזג האוויר.",
-                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Christ_the_Redeemer_-_Cristo_Redentor.jpg/800px-Christ_the_Redeemer_-_Cristo_Redentor.jpg"
-            },
-            {
-                name: "מאצ'ו פיצ'ו",
-                etymology: "מקור השם הוא בשפת הקצ'ואה (שפת אימפריית האינקה). 'Machu' פירושו ישן או עתיק, ו-'Picchu' פירושו הר או פסגה. כלומר: 'ההר הישן' או 'הפסגה העתיקה'.",
-                builder: "נבנתה ככל הנראה ביוזמתו של קיסר האינקה הגדול פאצ'אקוטי (1438 - 1471), וננטשה כמאה שנים מאוחר יותר בעת הכיבוש הספרדי.",
-                duration: "ההערכה הארכיאולוגית היא שתהליך הבנייה נמשך בין 50 ל-80 שנים, החל מסביבות שנת 1450 ועד לעצירת העבודות (ונטישת האתר) בסמוך לאמצע המאה ה-16.",
-                reason: "החוקרים מאמינים כי האתר שימש כאחוזה מלכותית ומפלט מסתור עבור קיסר האינקה ומקורביו, וכן כמרכז דתי, חקלאי ואסטרונומי מקודש במרומי האנדים.",
-                fate: "העיר ננטשה במהירות בסמוך לזמן הכיבוש הספרדי של אימפריית האינקה, אך למרבה המזל, הכובשים הספרדים מעולם לא גילו אותה ולכן היא לא נהרסה או נבזזה. האתר נבלע בתוך צמחיית הג'ונגל הסבוכה, עד שהתגלה (מחדש לעולם המערבי) ב-1911 על ידי ההיסטוריון היירם בינגהאם. כיום היא מתוחזקת היטב ומוכרת כאתר הארכיאולוגי המפורסם ביותר בדרום אמריקה.",
-                dimensions: "האתר משתרע על פני שטח תלול של כ-32,500 דונם. הוא ממוקם בגובה של 2,430 מטרים מעל פני הים וכולל כ-200 מבנים שונים, טרסות חקלאיות ומערכות מים מורכבות.",
-                materials: "העיר נבנתה מאבני גרניט כבדות. אומני האינקה סיתתו את האבנים בקפידה רבה כך שהן משתלבות זו בזו באופן מושלם ללא שימוש במלט (שיטת בנייה המכונה בנייה יבשה), מה שהקנה למבנים עמידות מפני רעידות אדמה.",
-                image: "https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=800&q=80"
-            },
-            {
-                name: "צ'יצ'ן איצה",
-                etymology: "שם המורכב ממילים משפת המאיה: 'Chi' (פיות), 'chen' (בארות), ו-'Itza' (שם השבט שחי באזור). המשמעות המקובלת היא 'על פי בארות (שבט) האיצה', בהתייחס לסנוטות (בולעני המים) במקום.",
-                builder: "נבנתה והורחבה לאורך מאות שנים על ידי בני המאיה והטולטקים. המבנה המרכזי מיוחס גם למנהיג המיתולוגי/היסטורי קוקולקאן (המאה ה-10 לספירה).",
-                duration: "בניית העיר והרחבתה לא התבצעו בבת אחת, אלא התפרסו על פני מספר מאות שנים, החל מהקמתה במאה ה-6 לספירה, דרך שיא שגשוגה, ועד לשקיעתה סביב המאה ה-13.",
-                reason: "שימשה כמרכז פוליטי, דתי, תרבותי וכלכלי מרכזי של צפון חצי האי יוקטן. האתר כולל מקדשים ששימשו להקרבת קורבנות, מצפה כוכבים, ומגרש למשחקי כדור פולחניים.",
-                fate: "העיר דעכה וננטשה בהדרגה הרבה לפני הגעת הספרדים למקסיקו, והג'ונגל הטרופי כיסה לחלוטין את מרבית מבניה המונומנטליים. החל מהמאה ה-19 החלו חפירות ארכיאולוגיות מקיפות. כיום, מרבית האזור המרכזי של העיר (ובהם פירמידת קוקולקאן, מקדש הלוחמים ומגרש הכדור) משוחזרים ברמה גבוהה מאוד. האתר מהווה את אחת האטרקציות התיירותיות המרכזיות של מקסיקו.",
-                dimensions: "פירמידת קוקולקאן (המכונה אל קסטיליו) המרכזית מתנשאת לגובה של 24 מטרים (ועוד 6 מטרים של המקדש בראשה). רוחב בסיסה המרובע הוא כ-55.3 מטרים. יש בה 365 מדרגות בסך הכל.",
-                materials: "בנויה מאבן גיר קשה המסותתת היטב, חומר גלם הנפוץ מאוד באזור חצי האי יוקטן במקסיקו, שאפשר חריטה וגילוף של תבליטים מורכבים.",
-                image: "https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=800&q=80"
-            }
-        ];
+    <section id="emptyState" class="empty-state">
+      <strong data-i18n="howTitle">איך משתמשים?</strong>
+      <div data-i18n="howText">מקלידים שם של מקום, אדם, בעל חיים, מבנה, נהר, הר או עיר. אם הערך נמצא בוויקיפדיה, יוצגו תקציר, תמונה וקישור לערך המלא. כאשר יש קואורדינטות, תופיע גם מפה.</div>
+    </section>
 
-        // פונקציה לייצור כרטיסיות ה-HTML עם אנימציה
-        function renderWonders() {
-            const container = document.getElementById('wonders-container');
-            
-            wonders.forEach((wonder, index) => {
-                const card = document.createElement('article');
-                card.className = `bg-gray-850 rounded-2xl overflow-hidden shadow-2xl border border-gray-800 transition-all duration-300 hover:-translate-y-2 hover:shadow-blue-900/20 flex flex-col card-animate opacity-0`;
-                card.style.animationDelay = `${index * 0.15}s`;
-                
-                card.innerHTML = `
-                    <div class="relative h-60 sm:h-72 w-full overflow-hidden group border-b border-gray-800 cursor-pointer" onclick="openImageModal('${wonder.image}')">
-                        <img src="${wonder.image}" alt="תמונה של ${wonder.name}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy">
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                            <svg class="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                        </div>
-                    </div>
-                    <div class="p-6 sm:p-8 flex-1 flex flex-col gap-5 text-sm sm:text-base text-gray-300">
-                        
-                        <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-emerald-400 drop-shadow-sm mb-2">${wonder.name}</h2>
+    <section id="resultsGrid" class="grid hidden">
+      <article class="panel" id="resultPanel">
+        <img id="resultImage" class="result-image hidden" alt="" />
+        <div class="result-body">
+          <div class="label" id="resultType" data-i18n="resultLabel">תוצאה</div>
+          <h2 id="resultTitle" class="result-title"></h2>
+          <p id="resultExtract" class="extract"></p>
 
-                        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800/50">
-                            <span class="flex items-center gap-2 font-bold text-emerald-400 mb-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-                                פירוש ומקור השם
-                            </span>
-                            <p class="leading-relaxed text-gray-400">${wonder.etymology}</p>
-                        </div>
+          <div class="meta">
+            <div class="meta-item">
+              <strong data-i18n="sourceLabel">מקור מידע</strong>
+              <span id="sourceName">Wikipedia</span>
+            </div>
+            <div class="meta-item">
+              <strong data-i18n="languageLabel">שפת התוצאה</strong>
+              <span id="languageName">עברית</span>
+            </div>
+            <div class="meta-item">
+              <strong data-i18n="coordsLabel">קואורדינטות</strong>
+              <span id="coordsText">—</span>
+            </div>
+            <div class="meta-item">
+              <strong data-i18n="pageLabel">דף מקור</strong>
+              <span id="pageTitle">—</span>
+            </div>
+          </div>
 
-                        <div>
-                            <span class="block font-bold text-blue-400 mb-1">שם הבונה:</span>
-                            <p class="leading-relaxed">${wonder.builder}</p>
-                        </div>
+          <div class="actions">
+            <a id="wikiLink" class="link-btn" href="#" target="_blank" rel="noopener" data-i18n="openWikipedia">פתח בוויקיפדיה</a>
+            <a id="osmLink" class="link-btn hidden" href="#" target="_blank" rel="noopener" data-i18n="openMap">פתח מפה</a>
+            <a id="routeLink" class="link-btn hidden" href="#" target="_blank" rel="noopener" data-i18n="openRoute">פתח מסלול</a>
+          </div>
+        </div>
+      </article>
 
-                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+      <aside class="panel" id="mapPanel">
+        <div id="map"></div>
+        <div id="mapNote" class="map-note" data-i18n="mapWaiting">המפה תופיע כאן כאשר לתוצאה יש מיקום מדויק.</div>
+      </aside>
+    </section>
 
-                        <div>
-                            <span class="block font-bold text-yellow-400 mb-1">משך הבנייה:</span>
-                            <p class="leading-relaxed">${wonder.duration}</p>
-                        </div>
+    <footer data-i18n="footer">נבנה כאתר סטטי חינמי ל־GitHub Pages, עם JavaScript בצד הדפדפן בלבד.</footer>
+  </div>
 
-                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+  <script>
+    const translations = {
+      he: {
+        dir: "rtl", langName: "עברית", brand: "אטלס ידע עולמי", title: "חפש אדם, בעל חיים או מקום — וקבל מידע, תמונה ומפה",
+        subtitle: "גרסת התחלה חינמית לאתר GitHub Pages. האתר שואב תקציר ותמונה מוויקיפדיה, ואם קיים מיקום — מציג אותו על מפה עם קישור לניווט.",
+        placeholder: "לדוגמה: מגדל אייפל, אריסטו, אריה", searchButton: "חפש", ready: "הקלד שם ולחץ חיפוש.",
+        searching: "מחפש מידע...", notFound: "לא נמצאה תוצאה ברורה. נסה לכתוב שם אחר או לעבור שפה.", error: "אירעה שגיאה זמנית. נסה שוב בעוד רגע.",
+        howTitle: "איך משתמשים?", howText: "מקלידים שם של מקום, אדם, בעל חיים, מבנה, נהר, הר או עיר. אם הערך נמצא בוויקיפדיה, יוצגו תקציר, תמונה וקישור לערך המלא. כאשר יש קואורדינטות, תופיע גם מפה.",
+        resultLabel: "תוצאה", sourceLabel: "מקור מידע", languageLabel: "שפת התוצאה", coordsLabel: "קואורדינטות", pageLabel: "דף מקור", openWikipedia: "פתח בוויקיפדיה", openMap: "פתח מפה", openRoute: "פתח מסלול", mapWaiting: "המפה תופיע כאן כאשר לתוצאה יש מיקום מדויק.", mapNoLocation: "לתוצאה הזו אין קואורדינטות בוויקיפדיה. ניתן להרחיב בהמשך עם חיפוש OpenStreetMap.", footer: "נבנה כאתר סטטי חינמי ל־GitHub Pages, עם JavaScript בצד הדפדפן בלבד."
+      },
+      en: {
+        dir: "ltr", langName: "English", brand: "Universal Knowledge Atlas", title: "Search a person, animal, or place — get facts, an image, and a map",
+        subtitle: "A free starter version for GitHub Pages. It retrieves a summary and image from Wikipedia, and when coordinates exist, it displays a map and navigation links.",
+        placeholder: "For example: Eiffel Tower, Aristotle, Lion", searchButton: "Search", ready: "Type a name and press Search.",
+        searching: "Searching...", notFound: "No clear result was found. Try another name or switch language.", error: "A temporary error occurred. Please try again.",
+        howTitle: "How to use it", howText: "Type the name of a place, person, animal, building, river, mountain, or city. If Wikipedia has a matching entry, the site shows a summary, image, and source link. If coordinates exist, a map appears too.",
+        resultLabel: "Result", sourceLabel: "Information source", languageLabel: "Result language", coordsLabel: "Coordinates", pageLabel: "Source page", openWikipedia: "Open Wikipedia", openMap: "Open map", openRoute: "Open route", mapWaiting: "The map will appear here when the result has exact coordinates.", mapNoLocation: "This result has no coordinates in Wikipedia. It can later be expanded with OpenStreetMap search.", footer: "Built as a free static GitHub Pages site using browser-side JavaScript only."
+      },
+      fr: { dir: "ltr", langName: "Français", brand: "Atlas universel du savoir", title: "Recherchez une personne, un animal ou un lieu", subtitle: "Version de départ gratuite pour GitHub Pages, avec résumé, image et carte lorsque disponibles.", placeholder: "Exemple : Tour Eiffel, Aristote, Lion", searchButton: "Rechercher", ready: "Saisissez un nom puis lancez la recherche.", searching: "Recherche...", notFound: "Aucun résultat clair. Essayez un autre nom ou une autre langue.", error: "Erreur temporaire. Réessayez.", howTitle: "Mode d’emploi", howText: "Saisissez un nom. Le site affiche un résumé, une image, un lien source et parfois une carte.", resultLabel: "Résultat", sourceLabel: "Source", languageLabel: "Langue", coordsLabel: "Coordonnées", pageLabel: "Page source", openWikipedia: "Ouvrir Wikipédia", openMap: "Ouvrir la carte", openRoute: "Itinéraire", mapWaiting: "La carte apparaît lorsqu’il existe des coordonnées.", mapNoLocation: "Aucune coordonnée disponible pour ce résultat.", footer: "Site statique gratuit pour GitHub Pages." },
+      es: { dir: "ltr", langName: "Español", brand: "Atlas universal del conocimiento", title: "Busca una persona, animal o lugar", subtitle: "Versión inicial gratuita para GitHub Pages, con resumen, imagen y mapa cuando existan datos.", placeholder: "Ejemplo: Torre Eiffel, Aristóteles, León", searchButton: "Buscar", ready: "Escribe un nombre y pulsa Buscar.", searching: "Buscando...", notFound: "No se encontró un resultado claro.", error: "Error temporal. Inténtalo de nuevo.", howTitle: "Cómo usar", howText: "Escribe un nombre. El sitio muestra resumen, imagen, enlace fuente y a veces un mapa.", resultLabel: "Resultado", sourceLabel: "Fuente", languageLabel: "Idioma", coordsLabel: "Coordenadas", pageLabel: "Página fuente", openWikipedia: "Abrir Wikipedia", openMap: "Abrir mapa", openRoute: "Abrir ruta", mapWaiting: "El mapa aparecerá si hay coordenadas.", mapNoLocation: "Este resultado no tiene coordenadas disponibles.", footer: "Sitio estático gratuito para GitHub Pages." },
+      de: { dir: "ltr", langName: "Deutsch", brand: "Universeller Wissensatlas", title: "Suche Person, Tier oder Ort", subtitle: "Kostenlose Starter-Version für GitHub Pages mit Zusammenfassung, Bild und Karte, wenn verfügbar.", placeholder: "Beispiel: Eiffelturm, Aristoteles, Löwe", searchButton: "Suchen", ready: "Namen eingeben und suchen.", searching: "Suche...", notFound: "Kein eindeutiges Ergebnis gefunden.", error: "Vorübergehender Fehler. Bitte erneut versuchen.", howTitle: "So funktioniert es", howText: "Name eingeben. Die Seite zeigt Zusammenfassung, Bild, Quellenlink und manchmal eine Karte.", resultLabel: "Ergebnis", sourceLabel: "Quelle", languageLabel: "Sprache", coordsLabel: "Koordinaten", pageLabel: "Quellseite", openWikipedia: "Wikipedia öffnen", openMap: "Karte öffnen", openRoute: "Route öffnen", mapWaiting: "Die Karte erscheint, wenn Koordinaten vorhanden sind.", mapNoLocation: "Für dieses Ergebnis gibt es keine Koordinaten.", footer: "Kostenlose statische GitHub-Pages-Seite." },
+      it: { dir: "ltr", langName: "Italiano", brand: "Atlante universale della conoscenza", title: "Cerca una persona, un animale o un luogo", subtitle: "Versione iniziale gratuita per GitHub Pages con riassunto, immagine e mappa quando disponibili.", placeholder: "Esempio: Torre Eiffel, Aristotele, Leone", searchButton: "Cerca", ready: "Inserisci un nome e cerca.", searching: "Ricerca...", notFound: "Nessun risultato chiaro trovato.", error: "Errore temporaneo. Riprova.", howTitle: "Come si usa", howText: "Inserisci un nome. Il sito mostra riassunto, immagine, link e talvolta mappa.", resultLabel: "Risultato", sourceLabel: "Fonte", languageLabel: "Lingua", coordsLabel: "Coordinate", pageLabel: "Pagina fonte", openWikipedia: "Apri Wikipedia", openMap: "Apri mappa", openRoute: "Apri percorso", mapWaiting: "La mappa appare se ci sono coordinate.", mapNoLocation: "Nessuna coordinata disponibile.", footer: "Sito statico gratuito per GitHub Pages." },
+      ar: { dir: "rtl", langName: "العربية", brand: "أطلس المعرفة العالمي", title: "ابحث عن شخص أو حيوان أو مكان", subtitle: "نسخة بداية مجانية لـ GitHub Pages تعرض ملخصاً وصورة وخريطة عند توفر الإحداثيات.", placeholder: "مثال: برج إيفل، أرسطو، أسد", searchButton: "بحث", ready: "اكتب اسماً واضغط بحث.", searching: "جارٍ البحث...", notFound: "لم يتم العثور على نتيجة واضحة.", error: "حدث خطأ مؤقت. حاول مرة أخرى.", howTitle: "طريقة الاستخدام", howText: "اكتب اسماً، وسيعرض الموقع ملخصاً وصورة ورابطاً للمصدر، وأحياناً خريطة.", resultLabel: "نتيجة", sourceLabel: "المصدر", languageLabel: "لغة النتيجة", coordsLabel: "الإحداثيات", pageLabel: "صفحة المصدر", openWikipedia: "افتح ويكيبيديا", openMap: "افتح الخريطة", openRoute: "افتح المسار", mapWaiting: "ستظهر الخريطة عند توفر الإحداثيات.", mapNoLocation: "لا توجد إحداثيات لهذه النتيجة.", footer: "موقع ثابت مجاني على GitHub Pages." }
+    };
 
-                        <div>
-                            <span class="block font-bold text-blue-400 mb-1">סיבת הבנייה:</span>
-                            <p class="leading-relaxed">${wonder.reason}</p>
-                        </div>
+    const fallbackTitles = {
+      he: { "Eiffel Tower": "מגדל אייפל", "Aristotle": "אריסטו", "Lion": "אריה", "Jerusalem": "ירושלים" },
+      ar: { "Eiffel Tower": "برج إيفل", "Aristotle": "أرسطو", "Lion": "أسد", "Jerusalem": "القدس" },
+      en: { "Eiffel Tower": "Eiffel Tower", "Aristotle": "Aristotle", "Lion": "Lion", "Jerusalem": "Jerusalem" }
+    };
 
-                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+    const languageSelect = document.getElementById("languageSelect");
+    const searchForm = document.getElementById("searchForm");
+    const searchInput = document.getElementById("searchInput");
+    const statusEl = document.getElementById("status");
+    const emptyState = document.getElementById("emptyState");
+    const resultsGrid = document.getElementById("resultsGrid");
+    const resultImage = document.getElementById("resultImage");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultExtract = document.getElementById("resultExtract");
+    const languageName = document.getElementById("languageName");
+    const coordsText = document.getElementById("coordsText");
+    const pageTitle = document.getElementById("pageTitle");
+    const wikiLink = document.getElementById("wikiLink");
+    const osmLink = document.getElementById("osmLink");
+    const routeLink = document.getElementById("routeLink");
+    const mapNote = document.getElementById("mapNote");
 
-                        <div>
-                            <span class="block font-bold text-red-400 mb-1">גורל סופי (סטטוס כיום):</span>
-                            <p class="leading-relaxed">${wonder.fate}</p>
-                        </div>
+    let currentLanguage = "he";
+    let map;
+    let marker;
 
-                        <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+    function t(key) {
+      return translations[currentLanguage][key] || translations.en[key] || key;
+    }
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-900 p-4 rounded-xl border border-gray-800 mt-auto">
-                            <div>
-                                <span class="block font-bold text-purple-400 mb-2">מידות:</span>
-                                <p class="leading-relaxed text-sm text-gray-400">${wonder.dimensions}</p>
-                            </div>
-                            <div>
-                                <span class="block font-bold text-orange-400 mb-2">חומרים:</span>
-                                <p class="leading-relaxed text-sm text-gray-400">${wonder.materials}</p>
-                            </div>
-                        </div>
+    function applyLanguage(lang) {
+      currentLanguage = translations[lang] ? lang : "he";
+      document.documentElement.lang = currentLanguage;
+      document.documentElement.dir = translations[currentLanguage].dir;
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        el.textContent = t(key);
+      });
+      document.querySelectorAll("[data-placeholder-key]").forEach((el) => {
+        el.placeholder = t(el.getAttribute("data-placeholder-key"));
+      });
+      languageName.textContent = translations[currentLanguage].langName;
+      if (!resultsGrid.classList.contains("hidden")) mapNote.textContent = t("mapWaiting");
+    }
 
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+    function initializeMap() {
+      if (map) return;
+      map = L.map("map", { scrollWheelZoom: true }).setView([31.778, 35.235], 2);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+    }
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.style.color = isError ? "var(--danger)" : "var(--muted)";
+    }
+
+    async function fetchWikipediaSummary(query, lang) {
+      const encoded = encodeURIComponent(query.trim());
+      const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encoded}&format=json&origin=*&srlimit=1`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+      const best = searchData?.query?.search?.[0];
+      if (!best) return null;
+
+      const title = encodeURIComponent(best.title);
+      const summaryUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${title}`;
+      const summaryRes = await fetch(summaryUrl);
+      if (!summaryRes.ok) return null;
+      return summaryRes.json();
+    }
+
+    function showResult(data) {
+      emptyState.classList.add("hidden");
+      resultsGrid.classList.remove("hidden");
+      resultTitle.textContent = data.title || "";
+      resultExtract.textContent = data.extract || "";
+      pageTitle.textContent = data.title || "—";
+      languageName.textContent = translations[currentLanguage].langName;
+      wikiLink.href = data.content_urls?.desktop?.page || data.content_urls?.mobile?.page || "#";
+
+      if (data.thumbnail?.source || data.originalimage?.source) {
+        resultImage.src = data.originalimage?.source || data.thumbnail.source;
+        resultImage.alt = data.title || "Wikipedia image";
+        resultImage.classList.remove("hidden");
+      } else {
+        resultImage.classList.add("hidden");
+        resultImage.removeAttribute("src");
+      }
+
+      const coordinates = data.coordinates;
+      if (coordinates && typeof coordinates.lat === "number" && typeof coordinates.lon === "number") {
+        const lat = coordinates.lat;
+        const lon = coordinates.lon;
+        coordsText.textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        initializeMap();
+        map.setView([lat, lon], 13);
+        if (marker) marker.remove();
+        marker = L.marker([lat, lon]).addTo(map).bindPopup(data.title || "Location").openPopup();
+        setTimeout(() => map.invalidateSize(), 80);
+        osmLink.href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=15/${lat}/${lon}`;
+        routeLink.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
+        osmLink.classList.remove("hidden");
+        routeLink.classList.remove("hidden");
+        mapNote.textContent = t("mapWaiting");
+      } else {
+        coordsText.textContent = "—";
+        osmLink.classList.add("hidden");
+        routeLink.classList.add("hidden");
+        initializeMap();
+        if (marker) marker.remove();
+        map.setView([20, 0], 2);
+        setTimeout(() => map.invalidateSize(), 80);
+        mapNote.textContent = t("mapNoLocation");
+      }
+    }
+
+    async function runSearch(query) {
+      if (!query.trim()) return;
+      setStatus(t("searching"));
+      try {
+        let data = await fetchWikipediaSummary(query, currentLanguage);
+        if (!data && currentLanguage !== "en") data = await fetchWikipediaSummary(query, "en");
+        if (!data) {
+          setStatus(t("notFound"), true);
+          return;
         }
+        showResult(data);
+        setStatus(data.description || t("resultLabel"));
+      } catch (error) {
+        console.error(error);
+        setStatus(t("error"), true);
+      }
+    }
 
-        // הפעלת הפונקציה בעת טעינת העמוד
-        document.addEventListener('DOMContentLoaded', renderWonders);
+    languageSelect.addEventListener("change", (event) => {
+      applyLanguage(event.target.value);
+    });
 
-        // פונקציות לפתיחה וסגירה של חלון הגדלת התמונה (Lightbox)
-        function openImageModal(imageSrc) {
-            const modal = document.getElementById('image-modal');
-            const modalImg = document.getElementById('modal-image');
-            
-            modalImg.src = imageSrc;
-            modal.classList.remove('hidden');
-            
-            // יצירת Reflow כדי שהאנימציה תעבוד בצורה חלקה
-            void modal.offsetWidth;
-            
-            modal.classList.replace('opacity-0', 'opacity-100');
-            modalImg.classList.replace('scale-95', 'scale-100');
-            document.body.style.overflow = 'hidden'; // מניעת גלילה של הרקע כשחלון פתוח
-        }
+    searchForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      runSearch(searchInput.value);
+    });
 
-        function closeImageModal() {
-            const modal = document.getElementById('image-modal');
-            const modalImg = document.getElementById('modal-image');
-            
-            modal.classList.replace('opacity-100', 'opacity-0');
-            modalImg.classList.replace('scale-100', 'scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modalImg.src = '';
-                document.body.style.overflow = ''; // החזרת אפשרות הגלילה
-            }, 300); // ממתין לסיום אנימציית הסגירה
-        }
-    </script>
+    document.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const key = chip.dataset.example;
+        const localized = fallbackTitles[currentLanguage]?.[key] || fallbackTitles.en[key] || key;
+        searchInput.value = localized;
+        runSearch(localized);
+      });
+    });
+
+    applyLanguage("he");
+  </script>
 </body>
 </html>
