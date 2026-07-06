@@ -37,9 +37,19 @@ export default async function handler(request, response) {
     const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
     const page = pages[0];
 
-    if (page && !page.thumbnail && !page.original && page.pageprops?.wikibase_item) {
-      const imageUrl = await getWikidataImage(page.pageprops.wikibase_item);
+    if (page) {
+      let imageUrl = page.original?.source || page.thumbnail?.source || null;
+
+      if (!imageUrl && page.pageprops?.wikibase_item) {
+        imageUrl = await getWikidataImage(page.pageprops.wikibase_item);
+      }
+
+      if (!imageUrl) {
+        imageUrl = await getCommonsSearchImage(page.title);
+      }
+
       if (imageUrl) {
+        page.imageUrl = imageUrl;
         page.original = { source: imageUrl };
         page.thumbnail = { source: imageUrl };
       }
@@ -47,7 +57,7 @@ export default async function handler(request, response) {
 
     return response.status(200).json(data);
   } catch (error) {
-    return response.status(500).json({ error: 'Server error' });
+    return response.status(500).json({ error: 'Server error', details: String(error?.message || error) });
   }
 }
 
@@ -72,6 +82,36 @@ async function getWikidataImage(itemId) {
     if (!filename) return null;
 
     return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(filename)}?width=900`;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getCommonsSearchImage(title) {
+  try {
+    const url =
+      `https://commons.wikimedia.org/w/api.php` +
+      `?action=query` +
+      `&generator=search` +
+      `&gsrnamespace=6` +
+      `&gsrsearch=${encodeURIComponent(title)}` +
+      `&gsrlimit=1` +
+      `&prop=imageinfo` +
+      `&iiprop=url` +
+      `&iiurlwidth=900` +
+      `&format=json`;
+
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'UniversalKnowledgeAtlas/1.0 (Vercel Serverless Function)'
+      }
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+    const info = pages[0]?.imageinfo?.[0];
+    return info?.thumburl || info?.url || null;
   } catch (error) {
     return null;
   }
