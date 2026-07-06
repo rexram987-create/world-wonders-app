@@ -79,8 +79,6 @@ async function getWikidataFacts(itemId, lang) {
     addId('P141', 'מצב שימור', 'Conservation status');
   } else if (entityKind === 'country') {
     addId('P36', 'בירה', 'Capital');
-    add('אוכלוסייה', 'Population', formatNumber(valueOf('P1082')?.amount));
-    add('שטח', 'Area', formatArea(valueOf('P2046')?.amount, lang));
     addIds('P37', 'שפה רשמית', 'Official language', 4);
     addId('P38', 'מטבע', 'Currency');
     addId('P30', 'יבשת', 'Continent');
@@ -102,7 +100,6 @@ async function getWikidataFacts(itemId, lang) {
   } else {
     add('שם מדעי', 'Scientific name', valueOf('P225'));
     addId('P17', 'מדינה', 'Country');
-    add('אוכלוסייה', 'Population', formatNumber(valueOf('P1082')?.amount));
     add('תאריך יסוד/הקמה', 'Inception', formatWikidataDate(valueOf('P571')?.time, lang));
     addIds('P106', 'מקצוע', 'Occupation', 3);
   }
