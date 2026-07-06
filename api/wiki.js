@@ -40,7 +40,7 @@ async function getWikidataFacts(itemId, lang) {
   if (!entity) return { facts: [], entityType: '', entityKind: 'general', imageUrl: null };
 
   const claims = entity.claims || {};
-  const labelIds = collectEntityIds(claims, ['P31','P105','P17','P36','P106','P171','P141','P27','P19','P20','P37','P38','P30','P131','P706','P403','P885']);
+  const labelIds = collectEntityIds(claims, ['P31','P105','P17','P36','P106','P171','P141','P27','P19','P20','P37','P38','P30','P131','P706','P403','P885','P122','P1622']);
   const labels = await fetchLabels(labelIds, lang);
   const facts = [];
   let imageUrl = null;
@@ -56,6 +56,7 @@ async function getWikidataFacts(itemId, lang) {
     const vals = unique(idsOf(pid).map(labelOf).filter(Boolean)).slice(0, limit);
     if (vals.length) add(he, en, vals.join(', '));
   };
+  const addString = (pid, he, en) => { const v = valueOf(pid); if (typeof v === 'string') add(he, en, v); };
 
   const imageName = valueOf('P18');
   if (imageName) imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imageName)}?width=900`;
@@ -82,6 +83,11 @@ async function getWikidataFacts(itemId, lang) {
     addIds('P37', 'שפה רשמית', 'Official language', 4);
     addId('P38', 'מטבע', 'Currency');
     addId('P30', 'יבשת', 'Continent');
+    addId('P122', 'צורת ממשל', 'Form of government');
+    add('תאריך הקמה', 'Inception', formatWikidataDate(valueOf('P571')?.time, lang));
+    addString('P78', 'סיומת אינטרנט', 'Internet TLD');
+    addString('P474', 'קידומת טלפון', 'Calling code');
+    addId('P1622', 'כיוון נסיעה', 'Driving side');
   } else if (entityKind === 'city') {
     addId('P17', 'מדינה', 'Country');
     addId('P131', 'אזור מנהלי', 'Administrative region');
@@ -179,8 +185,8 @@ function cleanType(type, kind, lang) {
 }
 
 function friendlyFallback(id, lang) {
-  const he = { Q5:'אדם', Q515:'עיר', Q6256:'מדינה', Q8502:'הר', Q4022:'נהר', Q16521:'טקסון', Q729:'בעל חיים', Q486972:'יישוב', Q1549591:'עיר גדולה' };
-  const en = { Q5:'human', Q515:'city', Q6256:'country', Q8502:'mountain', Q4022:'river', Q16521:'taxon', Q729:'animal', Q486972:'human settlement', Q1549591:'big city' };
+  const he = { Q5:'אדם', Q515:'עיר', Q6256:'מדינה', Q8502:'הר', Q4022:'נהר', Q16521:'טקסון', Q729:'בעל חיים', Q486972:'יישוב', Q1549591:'עיר גדולה', Q13196750:'נהיגה בצד ימין', Q14565199:'נהיגה בצד שמאל' };
+  const en = { Q5:'human', Q515:'city', Q6256:'country', Q8502:'mountain', Q4022:'river', Q16521:'taxon', Q729:'animal', Q486972:'human settlement', Q1549591:'big city', Q13196750:'right-hand traffic', Q14565199:'left-hand traffic' };
   return (lang === 'en' ? en[id] : he[id]) || id;
 }
 
